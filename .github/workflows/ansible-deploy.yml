@@ -1,0 +1,40 @@
+name: Ansible Firewall Deploy
+
+on:
+  push:
+    paths:
+      - "ansible/**"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install ansible-core
+
+      - name: Dry-run (show what would change)
+        run: ansible-playbook -i ansible/inventory.ini ansible/site.yml --check --diff
+
+  apply:
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install ansible-core
+
+      - name: Apply changes
+        run: ansible-playbook -i ansible/inventory.ini ansible/site.yml --diff
+
+      - name: Show resulting rules file
+        run: cat ansible/firewall_rules.txt

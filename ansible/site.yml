@@ -1,0 +1,15 @@
+---
+- name: Manage mock firewall rules
+  hosts: firewall_servers
+  connection: local
+  gather_facts: false
+  vars_files:
+    - vars/allowed_ips.yml
+  tasks:
+    - name: Regenerate firewall rules file from allowed IP list
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/firewall_rules.txt"
+        content: |
+          {% for ip in allowed_ips %}
+          -A INPUT -s {{ ip }} -j ACCEPT
+          {% endfor %}
